@@ -104,15 +104,16 @@ module "terraform-intersight-iks" {
 # This is an Optional item.  Comment or remove to not use.  Multiple addons can be configured.
   addons       = [
     {
-    createNew = true
-    addonPolicyName = "smm-tf"
-    addonName            = "smm"
-    description       = "SMM Policy"
-    upgradeStrategy  = "AlwaysReinstall"
-    installStrategy  = "InstallOnly"
-    releaseVersion = "1.7.4-cisco4-helm3"
-    overrides = yamlencode({"demoApplication":{"enabled":true}})
-    },
+    createNew = false
+    use_existing = false
+    # addonPolicyName = "smm-tf"
+    # addonName            = "smm"
+    # description       = "SMM Policy"
+    # upgradeStrategy  = "AlwaysReinstall"
+    # installStrategy  = "InstallOnly"
+    # releaseVersion = "1.7.4-cisco4-helm3"
+    # overrides = yamlencode({"demoApplication":{"enabled":true}})
+    # },
     # {
     # createNew = true
     # addonName            = "ccp-monitor"
