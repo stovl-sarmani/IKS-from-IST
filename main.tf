@@ -8,7 +8,7 @@ module "terraform-intersight-iks" {
 
   source  = "terraform-cisco-modules/iks/intersight//"
   version = "2.1.0"
-
+  iksVersionName = "1.19.15-iks.3"
 # Kubernetes Cluster Profile  Adjust the values as needed.
   cluster = {
     name                = "new_cluster_ist"
