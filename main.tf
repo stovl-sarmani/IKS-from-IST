@@ -102,7 +102,7 @@ module "terraform-intersight-iks" {
 
 # Addon Profile and Policies (To create new change "createNew" to 'true' and uncomment variables and modify them to meet your needs.)
 # This is an Optional item.  Comment or remove to not use.  Multiple addons can be configured.
-  addons       = [
+  addons       = {
     {
     createNew = false
     use_existing = false
@@ -123,7 +123,7 @@ module "terraform-intersight-iks" {
     # releaseVersion = "0.2.61-helm3"
     # # overrides = yamlencode({"demoApplication":{"enabled":true}})
     # }
-
+    }
 # Worker Node Instance Type (To create new change "use_existing" to 'false' and uncomment variables and modify them to meet your needs.)
   instance_type = {
     use_existing = true
