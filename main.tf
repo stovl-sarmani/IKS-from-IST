@@ -58,7 +58,7 @@ module "terraform-intersight-iks" {
   versionPolicy = {
     useExisting = true
     policyName     = "version-1-19-15-ssm"
-    iksVersionName = "1.19.15-iks.3"
+    iksVersionName = "1.19.15-iks-1"
   }
 # Trusted Registry Policy (To create new change "use_existing" to 'false' and set "create_new' to 'true' uncomment variables and modify them to meet your needs.)
 # Set both variables to 'false' if this policy is not needed.
