@@ -116,8 +116,8 @@ module "terraform-intersight-iks" {
     # },
     # {
     # createNew = true
-    # addonName            = "ccp-monitor"
-    # description       = "monitor Policy"
+    # # addonName            = "ccp-monitor"
+    # # description       = "monitor Policy"
     # # upgradeStrategy  = "AlwaysReinstall"
     # # installStrategy  = "InstallOnly"
     # releaseVersion = "0.2.61-helm3"
