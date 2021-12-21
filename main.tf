@@ -1,238 +1,139 @@
-
-#Importing existing components if they exist.
-data "intersight_kubernetes_virtual_machine_infra_config_policy" "this" {
-  count = var.infraConfigPolicy.use_existing == true ? 1 : 0
-  name  = var.infraConfigPolicy.policyName
-}
-data "intersight_ippool_pool" "this" {
-  count = var.ip_pool.use_existing == true ? 1 : 0
-  name  = var.ip_pool.name
-}
-data "intersight_kubernetes_network_policy" "this" {
-  count = var.k8s_network.use_existing == true ? 1 : 0
-  name  = var.k8s_network.name
-}
-data "intersight_kubernetes_sys_config_policy" "this" {
-  count = var.sysconfig.use_existing == true ? 1 : 0
-  name  = var.sysconfig.name
-}
-data "intersight_kubernetes_trusted_registries_policy" "this" {
-  count = var.tr_policy.use_existing == true ? 1 : 0
-  name  = var.tr_policy.name
-}
-data "intersight_kubernetes_container_runtime_policy" "this" {
-  count = var.runtime_policy.use_existing == true ? 1 : 0
-  name  = var.runtime_policy.name
-}
-data "intersight_kubernetes_version_policy" "this" {
-  count = var.versionPolicy.useExisting == true ? 1 : 0
-  name  = var.versionPolicy.policyName
-}
-data "intersight_kubernetes_virtual_machine_instance_type" "this" {
-  count = var.instance_type.use_existing == true ? 1 : 0
-  name  = var.instance_type.name
+provider "intersight" {
+  apikey    = var.apikey
+  secretkey = var.secretkey
+  endpoint  = var.endpoint
 }
 
-module "infra_config_policy" {
-  source = "terraform-cisco-modules/iks/intersight//modules/infra_config_policy"
-  count  = var.infraConfigPolicy.use_existing == true ? 0 : 1
-  vmConfig = {
-    platformType       = var.infraConfigPolicy.platformType
-    targetName         = var.infraConfigPolicy.targetName
-    policyName         = var.infraConfigPolicy.policyName
-    description        = var.infraConfigPolicy.description
-    interfaces         = var.infraConfigPolicy.interfaces
-    vcTargetName       = var.infraConfigPolicy.vcTargetName
-    vcClusterName      = var.infraConfigPolicy.vcClusterName
-    vcDatastoreName    = var.infraConfigPolicy.vcDatastoreName
-    vcResourcePoolName = var.infraConfigPolicy.vcResourcePoolName
-    vcPassword         = var.infraConfigPolicy.vcPassword
+module "terraform-intersight-iks" {
+
+  source  = "terraform-cisco-modules/iks/intersight//"
+  version = "2.1.0"
+
+# Kubernetes Cluster Profile  Adjust the values as needed.
+  cluster = {
+    name                = "new_cluster_ist"
+    action              = "Unassign"
+    wait_for_completion = false
+    worker_nodes        = 1
+    load_balancers      = 1
+    worker_max          = 2
+    control_nodes       = 1
+    ssh_user            = var.ssh_user
+    ssh_public_key      = var.ssh_key
   }
 
-  org_name = var.organization
-  tags     = var.tags
-}
-module "ip_pool_policy" {
-  count            = var.ip_pool.use_existing == true ? 0 : 1
-  source           = "terraform-cisco-modules/iks/intersight//modules/ip_pool"
-  name             = var.ip_pool.name
-  starting_address = var.ip_pool.ip_starting_address
-  pool_size        = var.ip_pool.ip_pool_size
-  netmask          = var.ip_pool.ip_netmask
-  gateway          = var.ip_pool.ip_gateway
-  primary_dns      = var.ip_pool.dns_servers[0]
-  secondary_dns    = length(var.ip_pool.dns_servers) > 1 ? var.ip_pool.dns_servers[1] : null
-  org_name         = var.organization
-  tags             = var.tags
-}
-module "k8s_network" {
-  source       = "terraform-cisco-modules/iks/intersight//modules/k8s_network"
-  count        = var.k8s_network.use_existing == true ? 0 : 1
-  policy_name  = var.k8s_network.name
-  pod_cidr     = var.k8s_network.pod_cidr
-  service_cidr = var.k8s_network.service_cidr
-  cni          = var.k8s_network.cni
-  org_name     = var.organization
-  tags         = var.tags
-}
-module "k8s_sysconfig" {
-  source      = "terraform-cisco-modules/iks/intersight//modules/k8s_sysconfig"
-  count       = var.sysconfig.use_existing == true ? 0 : 1
-  policy_name = var.sysconfig.name
-  dns_servers = var.sysconfig.dns_servers
-  ntp_servers = var.sysconfig.ntp_servers
-  timezone    = var.sysconfig.timezone
-  domain_name = var.sysconfig.domain_name
-  org_name    = var.organization
-  tags        = var.tags
-}
-module "trusted_registry" {
-  source              = "terraform-cisco-modules/iks/intersight//modules/trusted_registry"
-  count               = var.tr_policy.create_new == true ? 1 : 0
-  policy_name         = var.tr_policy.name
-  unsigned_registries = var.tr_policy.unsigned_registries
-  root_ca_registries  = var.tr_policy.root_ca_registries
-  org_name            = var.organization
-  tags                = var.tags
-}
-module "runtime_policy" {
-  source               = "terraform-cisco-modules/iks/intersight//modules/runtime_policy"
-  count                = var.runtime_policy.create_new == true ? 1 : 0
-  name                 = var.runtime_policy.name
-  proxy_http_hostname  = var.runtime_policy.http_proxy_hostname
-  proxy_http_port      = var.runtime_policy.http_proxy_port
-  proxy_http_protocol  = var.runtime_policy.http_proxy_protocol
-  proxy_http_username  = var.runtime_policy.http_proxy_username
-  proxy_http_password  = var.runtime_policy.http_proxy_password
-  proxy_https_hostname = var.runtime_policy.https_proxy_hostname
-  proxy_https_port     = var.runtime_policy.https_proxy_port
-  proxy_https_protocol = var.runtime_policy.https_proxy_protocol
-  proxy_https_username = var.runtime_policy.https_proxy_username
-  proxy_https_password = var.runtime_policy.https_proxy_password
-  docker_no_proxy      = var.runtime_policy.docker_no_proxy
-  org_name             = var.organization
-  tags                 = var.tags
-}
-module "k8s_version" {
-  source         = "terraform-cisco-modules/iks/intersight//modules/version"
-  count          = var.versionPolicy.useExisting == true ? 0 : 1
-  iksVersionName = var.versionPolicy.versionName
-  policyName     = var.versionPolicy.policyName
-  description    = var.versionPolicy.description
-  org_name       = var.organization
-  tags           = var.tags
-}
-module "instance_type" {
-  source    = "terraform-cisco-modules/iks/intersight//modules/worker_profile"
-  count     = var.instance_type.use_existing == true ? 0 : 1
-  name      = var.instance_type.name
-  cpu       = var.instance_type.cpu
-  memory    = var.instance_type.memory
-  disk_size = var.instance_type.disk_size
-  org_name  = var.organization
-  tags      = var.tags
-}
-module "cluster_profile" {
-  source              = "terraform-cisco-modules/iks/intersight//modules/cluster"
-  name                = var.cluster.name
-  action              = var.cluster.action
-  wait_for_completion = var.cluster.wait_for_completion
-  ip_pool_moid        = var.ip_pool.use_existing == true ? data.intersight_ippool_pool.this.0.results.0.moid : module.ip_pool_policy.0.ip_pool_moid
-  load_balancer       = var.cluster.load_balancers
-  ssh_key             = var.cluster.ssh_public_key
-  ssh_user            = var.cluster.ssh_user
-  net_config_moid     = var.k8s_network.use_existing == true ? data.intersight_kubernetes_network_policy.this.0.results.0.moid : module.k8s_network.0.network_policy_moid
-  sys_config_moid     = var.sysconfig.use_existing == true ? data.intersight_kubernetes_sys_config_policy.this.0.results.0.moid : module.k8s_sysconfig.0.sys_config_policy_moid
-  trusted_registry_policy_moid = trimspace(<<-EOT
-  %{if var.tr_policy.use_existing == false && var.tr_policy.create_new == false~}%{endif~}
-  %{if var.tr_policy.use_existing == true && var.tr_policy.create_new == false~}${data.intersight_kubernetes_trusted_registries_policy.this.0.results.0.moid}%{endif~}
-  %{if var.tr_policy.use_existing == true && var.tr_policy.create_new == true~}%{endif~}
-  %{if var.tr_policy.use_existing == false && var.tr_policy.create_new == true~}${module.trusted_registry.0.trusted_registry_moid}%{endif~}
-  EOT
-  )
-  runtime_policy_moid = trimspace(<<-EOT
-  %{if var.runtime_policy.use_existing == false && var.runtime_policy.create_new == false~}%{endif~}
-  %{if var.runtime_policy.use_existing == true && var.runtime_policy.create_new == false~}${data.intersight_kubernetes_container_runtime_policy.this.0.results.0.moid}%{endif~}
-  %{if var.runtime_policy.use_existing == true && var.runtime_policy.create_new == true~}%{endif~}
-  %{if var.runtime_policy.use_existing == false && var.runtime_policy.create_new == true~}${module.runtime_policy.0.runtime_policy_moid}%{endif~}
-  EOT
-  )
-  org_name = var.organization
-  tags     = var.tags
-}
-module "addons" {
 
-  source = "terraform-cisco-modules/iks/intersight//modules/addon_policy"
-  for_each = {
-    for addon in var.addons : addon.addonName => addon
-    if addon.createNew != false && can(addon)
-  }
-  addon = {
-    policyName       = each.value.addonPolicyName
-    addonName        = each.value.addonName
-    description      = each.value.description
-    upgradeStrategy  = each.value.upgradeStrategy
-    installStrategy  = each.value.installStrategy
-    overrideSets     = each.value.overrideSets
-    overrides        = each.value.overrides
-    releaseName      = each.value.releaseName
-    releaseNamespace = each.value.releaseNamespace
-    releaseVersion   = each.value.releaseVersion
-
+# IP Pool Information (To create new change "use_existing" to 'false' uncomment variables and modify them to meet your needs.)
+  ip_pool = {
+    use_existing        = false
+    name                = "New-IP-Pool-IST"
+     ip_starting_address = "10.0.208.165"
+     ip_pool_size        = "05"
+     ip_netmask          = "255.255.255.0"
+     ip_gateway          = "10.0.208.1"
+     dns_servers         = ["10.0.208.135"]
   }
 
-  org_name = var.organization
-  tags     = var.tags
-}
+# Sysconfig Policy (UI Reference NODE OS Configuration) (To create new change "use_existing" to 'false' uncomment variables and modify them to meet your needs.)
+  sysconfig = {
+    use_existing = true
+    name         = "stovl-k8s-sys-config-policy"
+    # domain_name  = "rich.ciscolabs.com"
+    # timezone     = "America/New_York"
+    # ntp_servers  = ["10.101.128.15"]
+    # dns_servers  = ["10.101.128.15"]
+  }
 
-module "cluster_addon_profile" {
+# Kubernetes Network CIDR (To create new change "use_existing" to 'false' uncomment variables and modify them to meet your needs.)
+  k8s_network = {
+    use_existing = true
+    name         = "stovl-k8s-network-policy"
 
-  source       = "terraform-cisco-modules/iks/intersight//modules/cluster_addon_profile"
-  depends_on   = [module.addons]
-  count        = var.addons != null ? 1 : 0
-  profile_name = "${var.cluster.name}-addon-profile"
+    ######### Below are the default settings.  Change if needed. #########
+    # pod_cidr     = "100.65.0.0/16"
+    # service_cidr = "100.64.0.0/24"
+    # cni          = "Calico"
+  }
+# Version policy (To create new change "useExisting" to 'false' uncomment variables and modify them to meet your needs.)
+  versionPolicy = {
+    useExisting = true
+    policyName     = "version-1-19-15-ssm"
+    iksVersionName = "1.19.15-iks.3"
+  }
+# Trusted Registry Policy (To create new change "use_existing" to 'false' and set "create_new' to 'true' uncomment variables and modify them to meet your needs.)
+# Set both variables to 'false' if this policy is not needed.
+  tr_policy = {
+    use_existing = false
+    create_new   = false
+    name         = "trusted-registry"
+  }
+# Runtime Policy (To create new change "use_existing" to 'false' and set "create_new' to 'true' uncomment variables and modify them to meet your needs.)
+# Set both variables to 'false' if this policy is not needed.
+  runtime_policy = {
+    use_existing = false
+    create_new   = false
+    # name                 = "runtime"
+    # http_proxy_hostname  = "t"
+    # http_proxy_port      = 80
+    # http_proxy_protocol  = "http"
+    # http_proxy_username  = null
+    # http_proxy_password  = null
+    # https_proxy_hostname = "t"
+    # https_proxy_port     = 8080
+    # https_proxy_protocol = "https"
+    # https_proxy_username = null
+    # https_proxy_password = null
+  }
 
-  addons = var.addons
+# Infrastructure Configuration Policy (To create new change "use_existing" to 'false' and uncomment variables and modify them to meet your needs.)
+  infraConfigPolicy = {
+    use_existing = true
+    # platformType = "iwe"
+    # targetName   = "falcon"
+    policyName   = "stovl-vcenter-infra"
+    # description  = "Test Policy"
+    # interfaces   = ["iwe-guests"]
+    # vcTargetName   = optional(string)
+    # vcClusterName      = optional(string)
+    # vcDatastoreName     = optional(string)
+    # vcResourcePoolName = optional(string)
+    # vcPassword      = optional(string)
+  }
 
-  cluster_moid = module.cluster_profile.k8s_cluster_moid
-  org_name     = var.organization
-  tags         = var.tags
-}
-module "control_profile" {
-  source       = "terraform-cisco-modules/iks/intersight//modules/node_profile"
-  name         = "${var.cluster.name}-control_profile"
-  profile_type = "ControlPlane"
-  min_size     = var.cluster.control_nodes
-  max_size     = var.cluster.control_nodes + 1
-  ip_pool_moid = var.ip_pool.use_existing == true ? data.intersight_ippool_pool.this.0.results.0.moid : module.ip_pool_policy.0.ip_pool_moid
-  version_moid = var.versionPolicy.useExisting == true ? data.intersight_kubernetes_version_policy.this.0.results.0.moid : module.k8s_version.0.version_policy_moid
-  cluster_moid = module.cluster_profile.k8s_cluster_profile_moid
+# Addon Profile and Policies (To create new change "createNew" to 'true' and uncomment variables and modify them to meet your needs.)
+# This is an Optional item.  Comment or remove to not use.  Multiple addons can be configured.
+  addons       = [
+    {
+    createNew = true
+    addonPolicyName = "smm-tf"
+    addonName            = "smm"
+    description       = "SMM Policy"
+    upgradeStrategy  = "AlwaysReinstall"
+    installStrategy  = "InstallOnly"
+    releaseVersion = "1.7.4-cisco4-helm3"
+    overrides = yamlencode({"demoApplication":{"enabled":true}})
+    },
+    # {
+    # createNew = true
+    # addonName            = "ccp-monitor"
+    # description       = "monitor Policy"
+    # # upgradeStrategy  = "AlwaysReinstall"
+    # # installStrategy  = "InstallOnly"
+    # releaseVersion = "0.2.61-helm3"
+    # # overrides = yamlencode({"demoApplication":{"enabled":true}})
+    # }
+  ]
 
-}
-module "worker_profile" {
-  source       = "terraform-cisco-modules/iks/intersight//modules/node_profile"
-  name         = "${var.cluster.name}-worker_profile"
-  profile_type = "Worker"
-  min_size     = var.cluster.worker_nodes
-  max_size     = var.cluster.worker_max
-  ip_pool_moid = var.ip_pool.use_existing == true ? data.intersight_ippool_pool.this.0.results.0.moid : module.ip_pool_policy.0.ip_pool_moid
-  version_moid = var.versionPolicy.useExisting == true ? data.intersight_kubernetes_version_policy.this.0.results.0.moid : module.k8s_version.0.version_policy_moid
-  cluster_moid = module.cluster_profile.k8s_cluster_profile_moid
+# Worker Node Instance Type (To create new change "use_existing" to 'false' and uncomment variables and modify them to meet your needs.)
+  instance_type = {
+    use_existing = true
+    name         = "stovl-node-profile"
+    # cpu          = 4
+    # memory       = 16386
+    # disk_size    = 40
+  }
 
-}
-module "control_provider" {
-  source                   = "terraform-cisco-modules/iks/intersight//modules/infra_provider"
-  name                     = "${var.cluster.name}-control_provider"
-  instance_type_moid       = var.instance_type.use_existing == true ? data.intersight_kubernetes_virtual_machine_instance_type.this.0.results.0.moid : module.instance_type.0.moid
-  node_group_moid          = module.control_profile.node_group_profile_moid
-  infra_config_policy_moid = var.infraConfigPolicy.use_existing == true ? data.intersight_kubernetes_virtual_machine_infra_config_policy.this.0.results.0.moid : module.infra_config_policy.0.infra_config_moid
-  tags                     = var.tags
-}
-module "worker_provider" {
-  source                   = "terraform-cisco-modules/iks/intersight//modules/infra_provider"
-  name                     = "${var.cluster.name}-worker_provider"
-  instance_type_moid       = var.instance_type.use_existing == true ? data.intersight_kubernetes_virtual_machine_instance_type.this.0.results.0.moid : module.instance_type.0.moid
-  node_group_moid          = module.worker_profile.node_group_profile_moid
-  infra_config_policy_moid = var.infraConfigPolicy.use_existing == true ? data.intersight_kubernetes_virtual_machine_infra_config_policy.this.0.results.0.moid : module.infra_config_policy.0.infra_config_moid
-  tags                     = var.tags
+# Organization and Tag Information
+  organization = "default"
+  tags         = "IST"
 }
